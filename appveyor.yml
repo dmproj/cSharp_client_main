@@ -1,0 +1,17 @@
+version: 3.0.{build}
+configuration: Release
+before_build:
+# matches pinned version in global.json
+- ps: invoke-webrequest https://go.microsoft.com/fwlink/?LinkID=830694 -OutFile core.exe
+- ps: .\core.exe /install /quiet /norestart
+build_script:
+- ps: dotnet restore
+- ps: dotnet build -c Release .\src\StatsdClient
+- ps: dotnet build -c Release .\src\Tests
+test_script:
+- dotnet test .\src\Tests
+after_test:
+- ps: powershell -File .\update-projectjson.ps1
+- ps: dotnet pack -c Release .\src\StatsdClient --output .
+artifacts:
+- path: StatsdClient.*.nupkg
